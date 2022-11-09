@@ -1,8 +1,10 @@
 package com.findmecore.findmecore.config;
 
 import com.findmecore.findmecore.dto.SocialProvider;
+import com.findmecore.findmecore.entity.Employee;
 import com.findmecore.findmecore.entity.Role;
 import com.findmecore.findmecore.entity.User;
+import com.findmecore.findmecore.repo.EmployeeRepository;
 import com.findmecore.findmecore.repo.RoleRepository;
 import com.findmecore.findmecore.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -33,6 +36,9 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @Override
     @Transactional
     public void onApplicationEvent(final ContextRefreshedEvent event) {
@@ -43,6 +49,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         Role userRole = createRoleIfNotFound(Role.ROLE_USER);
         Role adminRole = createRoleIfNotFound(Role.ROLE_ADMIN);
         Role modRole = createRoleIfNotFound(Role.ROLE_MODERATOR);
+        Employee employee = createEmployee("");
         createUserIfNotFound("admin@javachinna.com", Set.of(userRole, adminRole, modRole));
         alreadySetup = true;
     }
@@ -73,5 +80,20 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             role = roleRepository.save(new Role(name));
         }
         return role;
+    }
+
+    @Transactional
+    Employee createEmployee(final String name) {
+        Optional<Employee> byId = employeeRepository.findById(1L);
+
+        if(byId.isEmpty()) {
+            Employee build = Employee.builder().employeeId(1L).address("Negombo")
+                    .email("dinesh@gmail.com").name("Dinesh Fernando")
+                    .intro("Cool GUY").ref1("1").ref2("RWR").build();
+            return employeeRepository.save(build);
+
+        }
+
+        return byId.get();
     }
 }
