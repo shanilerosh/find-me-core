@@ -151,7 +151,7 @@ public class EmployeeController {
 
     }
 
-    @GetMapping("/course/{id}")
+    @GetMapping("/education/{id}")
     public ResponseEntity<CourseDto> fetchCourseRecord(@PathVariable String id) {
         Course course = courseRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> {
@@ -159,7 +159,7 @@ public class EmployeeController {
                 });
 
         CourseDto courseDto = CourseDto.builder().courseName(course.getCourseName())
-                .institute(course.getEducation().getInstitute())
+                .instituteId(course.getEducation().getId())
                 .isDisplayMajor(course.isDisplayMajor())
                 .started(course.getStarted())
                 .ended(course.getEnded())

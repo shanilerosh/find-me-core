@@ -19,6 +19,7 @@ public class CourseDto {
     private Long id;
 
     private String institute;
+    private Long instituteId;
 
     private LocalDateTime started;
     private LocalDateTime ended;
