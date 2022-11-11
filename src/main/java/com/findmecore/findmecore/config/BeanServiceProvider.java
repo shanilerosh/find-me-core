@@ -1,0 +1,17 @@
+package com.findmecore.findmecore.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * @author ShanilErosh
+ */
+@Configuration
+public class BeanServiceProvider {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
+}

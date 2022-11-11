@@ -59,6 +59,15 @@ public class Employee implements Serializable {
     @OneToMany(mappedBy = "employee")
     Set<Ability> ability;
 
+    @OneToMany(mappedBy = "employee")
+    Set<Post> post;
+
+    @OneToMany(mappedBy = "employee")
+    Set<Reaction> reaction;
+
+    @OneToMany(mappedBy = "employee")
+    Set<Comment> comment;
+
 
     private String profilePicLocation;
 
