@@ -27,8 +27,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -56,22 +55,13 @@ public class PostController {
 
 
 
-//    let formData = new FormData();
-//                formData.append("file", state.fileList);
-//                formData.append("vehicleRenewalList", JSON.stringify(props.selectedVehicleList));
-//    dispatch({type: 'SUBMIT_BTN_LOADING', sBtnLoad: true})
-//            vehicleRenewalService.uplaodSumInsured(formData, USR_TSK_MRINP_USIF).then(res =>
-
     @PostMapping(value = "/")
-    public ResponseEntity<Boolean> uploadSumInsuredExcel(
+    public ResponseEntity<Boolean> createPost(
             @RequestParam(required = false) MultipartFile file, @RequestParam("postDto") String postDto) throws JsonProcessingException {
 
             PostDtoEmpl postDtoEmpl = objectMapper.readValue(postDto, PostDtoEmpl.class);
 
-        Employee employee = employeeRepository.findById(postDtoEmpl.getEmployeeId())
-                .orElseThrow(()-> {
-                    throw new ResolutionException("Employee not found");
-                });
+        Employee employee = findEmployeeById(postDtoEmpl.getEmployeeId());
 
         String path = null;
 
@@ -108,26 +98,44 @@ public class PostController {
         return days+" days ago";
     }
 
+    private String getReactionList(Set<Reaction> reactionSet,Set<Comment> commetSet) {
+        String reactionString = "";
+
+        if(!reactionSet.isEmpty()) {
+            int size = reactionSet.size();
+            reactionString += Integer.toString(size).concat(" reactions ");
+        }
+        if(!reactionSet.isEmpty() && !commetSet.isEmpty()){
+            reactionString += "& ";
+        }
+
+        if(!commetSet.isEmpty()) {
+            int size = commetSet.size();
+            reactionString += Integer.toString(size).concat(" comments ");
+        }
+
+        return reactionString;
+    }
+
     @GetMapping("/{empId}")
     public ResponseEntity<List<PostDto>> fetchPosts(@PathVariable String empId){
 
 
-        Employee employee = employeeRepository.findById(Long.valueOf(empId))
-                .orElseThrow(()-> {
-                    throw new ResolutionException("Employee not found");
-                });
+        Employee employee = findEmployeeById(empId);
 
-        List<PostDto> posts = postRepository.findAll().stream().
+        List<PostDto> posts = postRepository.findAll().stream().sorted(Comparator.comparing(Post::getCreatedDateTime)
+                .reversed()).
                 map(obj -> {
-                    long likeCount = obj.getReaction().stream().filter(lke -> lke.getReactionType()
-                            .equals(ReactionType.LIKE)).count();
-                    long heartCount = obj.getReaction().stream().filter(hrt -> hrt.getReactionType()
-                            .equals(ReactionType.HEART)).count();
 
-                    Optional<Reaction> employeeLike = obj.getReaction().stream().filter(lke -> lke.getReactionType()
-                            .equals(ReactionType.LIKE) && lke.getEmployee().equals(employee)).findFirst();
-                    Optional<Reaction> employeeHeart = obj.getReaction().stream().filter(lke -> lke.getReactionType()
-                            .equals(ReactionType.HEART) && lke.getEmployee().equals(employee)).findFirst();
+                    List<ReactDto> likeList = getListOfReaction(obj,ReactionType.LIKE);
+
+                    List<ReactDto> heartList = getListOfReaction(obj, ReactionType.HEART);
+
+
+                    Optional<Reaction> employeeLike = getEmployeeReactions(employee, obj, ReactionType.LIKE);
+                    Optional<Reaction> employeeHeart = getEmployeeReactions(employee, obj, ReactionType.HEART);
+
+                    List<CommentFrontDto> listOfcomments = getListOfComments(obj);
 
                     return PostDto.builder()
                     .id(obj.getId())
@@ -135,16 +143,52 @@ public class PostController {
                     .createdUser(obj.getEmployee().getName())
                     .postImageDestination(obj.getPostImageDestination())
                     .timeFrom(getDays(obj.getCreatedDateTime()))
-                    .totalReactions(likeCount+heartCount)
-                    .totalLikes(likeCount)
-                    .totalHearts(heartCount)
-                    .totalComments(0L)
+                    .totalReactions(((long) likeList.size()+(long) heartList.size()))
+                    .totalLikes((long) likeList.size())
+                    .totalHearts((long) heartList.size())
                     .isHearted(employeeHeart.isPresent())
                     .isLiked(employeeLike.isPresent())
+                    .userImg(employee.getProfilePicLocation())
+                    .likeList(likeList)
+                    .heartedList(heartList)
+                    .listOfComments(listOfcomments)
+                    .totalComments((long) listOfcomments.size())
+                    .reactionCommentCount(getReactionList(obj.getReaction(), obj.getComment()))
                     .build();
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(posts);
+    }
+
+    private Employee findEmployeeById(String empId) {
+        return employeeRepository.findById(Long.valueOf(empId))
+                .orElseThrow(() -> {
+                    throw new ResolutionException("Employee not found");
+                });
+    }
+
+    private Employee findEmployeeById(Long empId) {
+        return employeeRepository.findById(empId)
+                .orElseThrow(() -> {
+                    throw new ResolutionException("Employee not found");
+                });
+    }
+
+    private List<CommentFrontDto> getListOfComments(Post obj) {
+        return obj.getComment().stream().sorted(Comparator.comparing(Comment::getCreatedDateTime).reversed()).map(cmt -> CommentFrontDto.builder().commentText(cmt.getCmtTxt()).timeAgo(getDays(cmt.getCreatedDateTime()))
+                .userProfileImg(cmt.getEmployee().getProfilePicLocation()).username(cmt.getEmployee().getName())
+                .build()).collect(Collectors.toList());
+    }
+
+    private Optional<Reaction> getEmployeeReactions(Employee employee, Post obj, ReactionType reactionType) {
+        return obj.getReaction().stream().filter(lke -> lke.getReactionType()
+                .equals(reactionType) && lke.getEmployee().equals(employee)).findFirst();
+    }
+
+    private List<ReactDto> getListOfReaction(Post obj,ReactionType reactionType) {
+        return obj.getReaction().stream().filter(lke -> lke.getReactionType()
+                .equals(reactionType)).map(lkeObj -> ReactDto.builder().userProfileImg(lkeObj.getEmployee().getProfilePicLocation())
+                .username(lkeObj.getEmployee().getName()).timeAgo(getDays(lkeObj.getCreatedDateTime())).build()).collect(Collectors.toList());
     }
 
 
@@ -160,7 +204,7 @@ public class PostController {
             FileOutputStream output = new FileOutputStream(path);
             output.write(file.getBytes());
             output.close();
-            return StringUtils.FRONT_DESTINATION.concat(file.getOriginalFilename());
+            return StringUtils.FRONT_DESTINATION.concat(Objects.requireNonNull(file.getOriginalFilename()));
         } catch (Exception e) {
             throw new BadRequestException(e.getMessage());
         }
@@ -171,15 +215,9 @@ public class PostController {
     public ResponseEntity<Boolean> reactPost(@PathVariable String empId, @PathVariable String postId,
                                               @PathVariable String type){
 
-        Employee employee = employeeRepository.findById(Long.valueOf(empId))
-                .orElseThrow(()-> {
-                    throw new ResolutionException("Employee not found");
-                });
+        Employee employee = findEmployeeById(Long.valueOf(empId));
 
-        Post post = postRepository.findById(Long.valueOf(postId))
-                .orElseThrow(() -> {
-                    throw new ResolutionException("Post not found");
-                });
+        Post post = fetchPostById(postId);
 
         boolean alreadyExist = reactRepository.findByPostAndEmployee(post, employee)
                 .isPresent();
@@ -216,15 +254,9 @@ public class PostController {
     public ResponseEntity<Boolean> commentPost(@PathVariable String empId, @PathVariable String postId,
                                                @RequestBody CommentDto commentDto){
 
-        Employee employee = employeeRepository.findById(Long.valueOf(empId))
-                .orElseThrow(()-> {
-                    throw new ResolutionException("Employee not found");
-                });
+        Employee employee = findEmployeeById(Long.valueOf(empId));
 
-        Post post = postRepository.findById(Long.valueOf(postId))
-                .orElseThrow(() -> {
-                    throw new ResolutionException("Post not found");
-                });
+        Post post = fetchPostById(postId);
 
         Comment comment = Comment.builder().cmtTxt(commentDto.getCommentTxt())
                 .employee(employee).post(post).createdDateTime(LocalDateTime.now()).build();
@@ -233,6 +265,19 @@ public class PostController {
 
         //send notification
         return ResponseEntity.ok(Boolean.TRUE);
+    }
+
+    private Post fetchPostById(String postId) {
+        return postRepository.findById(Long.valueOf(postId))
+                .orElseThrow(() -> {
+                    throw new ResolutionException("Post not found");
+                });
+    }
+
+    @GetMapping("/comment/{postId}")
+    public ResponseEntity<List<CommentFrontDto>> getComments(@PathVariable String postId) {
+        Post post = fetchPostById(postId);
+        return ResponseEntity.ok(getListOfComments(post));
     }
 
 
