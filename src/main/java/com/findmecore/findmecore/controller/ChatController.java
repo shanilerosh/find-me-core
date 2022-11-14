@@ -10,6 +10,7 @@ import com.findmecore.findmecore.utility.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,6 +49,8 @@ public class ChatController {
     @Autowired
     private CommentRepository commentRepository;
 
+    private SimpMessagingTemplate template;
+
     @Autowired
     private ChatRepository chatRepository;
 
@@ -64,6 +67,8 @@ public class ChatController {
                 .sendingEmployee(senderEmployee).build();
 
         chatRepository.save(chatEntry);
+
+
         return ResponseEntity.ok(Boolean.TRUE);
     }
 
