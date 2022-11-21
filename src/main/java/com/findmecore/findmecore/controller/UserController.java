@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @GetMapping("/user/me")
-    @PreAuthorize("hasRole('USER')")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getCurrentUser(@CurrentUser LocalUser user) {
         return ResponseEntity.ok(GeneralUtils.buildUserInfo(user));
     }

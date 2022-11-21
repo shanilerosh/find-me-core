@@ -46,12 +46,13 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             return;
         }
         // Create initial roles
-        Role userRole = createRoleIfNotFound(Role.ROLE_USER);
-        Role adminRole = createRoleIfNotFound(Role.ROLE_ADMIN);
-        Role modRole = createRoleIfNotFound(Role.ROLE_MODERATOR);
-        Employee employee = createEmployee("");
-        createUserIfNotFound("admin@javachinna.com", Set.of(userRole, adminRole, modRole));
-        alreadySetup = true;
+        Role employeeRole = createRoleIfNotFound(Role.ROLE_EMPLOYEE);
+        Role employerRole = createRoleIfNotFound(Role.ROLE_EMPLOYEE);
+        createRoleIfNotFound(Role.ROLE_EMPLOYEE);
+        createRoleIfNotFound(Role.ROLE_EMPLOYER);
+//        Employee employee = createEmployee("");
+//        createUserIfNotFound("admin@javachinna.com", Set.of(userRole, adminRole, modRole));
+//        alreadySetup = true;
     }
 
     @Transactional

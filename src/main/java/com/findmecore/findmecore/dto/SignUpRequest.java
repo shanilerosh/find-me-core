@@ -1,5 +1,6 @@
 package com.findmecore.findmecore.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.findmecore.findmecore.validator.PasswordMatches;
 import lombok.Data;
 
@@ -18,7 +19,6 @@ public class SignUpRequest {
 
     private String providerUserId;
 
-    @NotEmpty
     private String displayName;
 
     @NotEmpty
@@ -26,8 +26,11 @@ public class SignUpRequest {
 
     private SocialProvider socialProvider;
 
-    @Size(min = 6, message = "{Size.userDto.password}")
+    @Size(min = 5, message = "{Size.userDto.password}")
     private String password;
+
+    @JsonProperty("isEmployer")
+    private boolean isEmployer;
 
     @NotEmpty
     private String matchingPassword;

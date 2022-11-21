@@ -68,8 +68,17 @@ public class Employee implements Serializable {
     @OneToMany(mappedBy = "employee")
     Set<Comment> comment;
 
+    @OneToMany(mappedBy = "friend")
+    Set<Friend> friends;
+
+    @OneToMany(mappedBy = "employee")
+    Set<JobEmployee> jobEmployees;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private User user;
+
 
     private String profilePicLocation;
-
+    private Boolean isUpdatedForTheFirstTime;
 
 }

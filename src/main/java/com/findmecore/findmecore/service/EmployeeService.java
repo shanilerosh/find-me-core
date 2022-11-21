@@ -27,4 +27,6 @@ public interface EmployeeService {
     Boolean createEducation(String empId, EdUtil expUtil);
 
     CourseDto fetchCourseRecord(String id);
+
+    Boolean createEmployeeWithUserData(UserDto userDto);
 }

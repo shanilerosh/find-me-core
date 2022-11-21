@@ -3,6 +3,8 @@ package com.findmecore.findmecore.service.impl;
 import com.findmecore.findmecore.dto.*;
 import com.findmecore.findmecore.entity.*;
 import com.findmecore.findmecore.exceptions.BadRequestException;
+import com.findmecore.findmecore.exceptions.ResourceNotFoundException;
+import com.findmecore.findmecore.exceptions.UserAlreadyExistAuthenticationException;
 import com.findmecore.findmecore.repo.*;
 import com.findmecore.findmecore.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
@@ -35,6 +37,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public Boolean updateEmployeeBasicData(String empId, EmployeeDto employeeDto) {
@@ -242,5 +247,20 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .build();
 
         return courseDto;
+    }
+
+    @Override
+    public Boolean createEmployeeWithUserData(UserDto userDto) {
+
+        User user = userRepository.findById(userDto.getUserId())
+                .orElseThrow(() -> {
+                    throw new UserAlreadyExistAuthenticationException("User not found");
+                });
+
+        Employee employee = Employee.builder().email(user.getEmail()).user(user).isUpdatedForTheFirstTime(false)
+                .build();
+
+        employeeRepository.save(employee);
+        return Boolean.TRUE;
     }
 }

@@ -3,6 +3,7 @@ package com.findmecore.findmecore.service.impl;
 import com.findmecore.findmecore.dto.LocalUser;
 import com.findmecore.findmecore.dto.SignUpRequest;
 import com.findmecore.findmecore.dto.SocialProvider;
+import com.findmecore.findmecore.dto.UserDto;
 import com.findmecore.findmecore.entity.Role;
 import com.findmecore.findmecore.entity.User;
 import com.findmecore.findmecore.exceptions.OAuth2AuthenticationProcessingException;
@@ -11,6 +12,8 @@ import com.findmecore.findmecore.repo.RoleRepository;
 import com.findmecore.findmecore.repo.UserRepository;
 import com.findmecore.findmecore.security.oAuth2.user.OAuth2UserInfo;
 import com.findmecore.findmecore.security.oAuth2.user.OAuth2UserInfoFactory;
+import com.findmecore.findmecore.service.EmployeeService;
+import com.findmecore.findmecore.service.EmployerService;
 import com.findmecore.findmecore.service.UserService;
 import com.findmecore.findmecore.utility.GeneralUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,12 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmployeeService employeeService;
+
+    @Autowired
+    private EmployerService employerService;
+
     @Override
     @Transactional(value = "transactionManager")
     public User registerNewUser(final SignUpRequest signUpRequest) throws UserAlreadyExistAuthenticationException {
@@ -52,16 +61,35 @@ public class UserServiceImpl implements UserService {
         user.setModifiedDate(now);
         user = userRepository.save(user);
         userRepository.flush();
+
+        //create user dto
+        UserDto userDto = convertUserToUserDto(user);
+
+        //Save create an employee or employer record
+        if(!signUpRequest.isEmployer()) {
+            employeeService.createEmployeeWithUserData(userDto);
+        }else{
+            employerService.createEmployerWithUserData(userDto);
+        }
+
         return user;
     }
+
+    private UserDto convertUserToUserDto(User user) {
+        return UserDto.builder().userId(user.getId()).diplayName(user.getDisplayName()).email(user.getEmail()).build();
+    }
+
 
     private User buildUser(final SignUpRequest formDTO) {
         User user = new User();
         user.setDisplayName(formDTO.getDisplayName());
         user.setEmail(formDTO.getEmail());
         user.setPassword(passwordEncoder.encode(formDTO.getPassword()));
+
         final HashSet<Role> roles = new HashSet<Role>();
-        roles.add(roleRepository.findByName(Role.ROLE_USER));
+        roles.add(formDTO.isEmployer() ? roleRepository.findByName(Role.ROLE_EMPLOYER) :
+                roleRepository.findByName(Role.ROLE_EMPLOYEE));
+
         user.setRoles(roles);
         user.setProvider(formDTO.getSocialProvider().getProviderType());
         user.setEnabled(true);

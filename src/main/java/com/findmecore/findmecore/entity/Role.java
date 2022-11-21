@@ -18,9 +18,8 @@ import java.util.Set;
 public class Role implements Serializable {
     private static final long serialVersionUID = 1L;
     public static final String USER = "USER";
-    public static final String ROLE_USER = "ROLE_USER";
-    public static final String ROLE_ADMIN = "ROLE_ADMIN";
-    public static final String ROLE_MODERATOR = "ROLE_MODERATOR";
+    public static final String ROLE_EMPLOYEE = "ROLE_EMPLOYEE";
+    public static final String ROLE_EMPLOYER = "ROLE_EMPLOYER";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

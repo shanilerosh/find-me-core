@@ -3,6 +3,7 @@ package com.findmecore.findmecore.utility;
 import com.findmecore.findmecore.dto.LocalUser;
 import com.findmecore.findmecore.dto.SocialProvider;
 import com.findmecore.findmecore.dto.UserInfo;
+import com.findmecore.findmecore.entity.Employee;
 import com.findmecore.findmecore.entity.Role;
 import com.findmecore.findmecore.entity.User;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -37,6 +38,28 @@ public class GeneralUtils {
     public static UserInfo buildUserInfo(LocalUser localUser) {
         List<String> roles = localUser.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toList());
         User user = localUser.getUser();
-        return new UserInfo(user.getId().toString(), user.getDisplayName(), user.getEmail(), roles);
+
+        UserInfo build = UserInfo.builder().id(user.getId().toString()).email(user.getEmail())
+                //.displayName(null == employee.getName() ? user.getEmail() : employee.getName())
+                //.profilePic(employee.getProfilePicLocation())
+                .userType("Employeer")
+                .roles(roles).build();
+
+        return build;
+
+    }
+
+    public static UserInfo buildUserInfo(LocalUser localUser, Employee employee) {
+        List<String> roles = localUser.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toList());
+        User user = localUser.getUser();
+
+        UserInfo build = UserInfo.builder().id(user.getId().toString())
+                .partyId(employee.getEmployeeId().toString()).email(user.getEmail())
+                .displayName(null == employee.getName() ? user.getEmail() : employee.getName()).profilePic(employee.getProfilePicLocation())
+                .userType("Employee")
+                .roles(roles).build();
+
+
+        return build;
     }
 }
