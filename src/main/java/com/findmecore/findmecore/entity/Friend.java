@@ -1,5 +1,7 @@
 package com.findmecore.findmecore.entity;
 
+import com.findmecore.findmecore.dto.FriendStatus;
+import com.findmecore.findmecore.dto.ReactionType;
 import lombok.*;
 
 import javax.persistence.*;
@@ -28,6 +30,12 @@ public class Friend implements Serializable {
     @JoinColumn(name = "friend_id")
     private Employee friend;
 
+    @ManyToOne
+    @JoinColumn(name = "current_id")
+    private Employee currentEmployee;
+
+    @Enumerated(EnumType.STRING)
+    private FriendStatus friendStatus;
 
 
 }

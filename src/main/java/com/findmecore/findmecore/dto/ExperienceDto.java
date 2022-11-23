@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author ShanilErosh
@@ -16,8 +17,8 @@ public class ExperienceDto {
 
     private Long id;
     private String company;
-    private LocalDateTime started;
-    private LocalDateTime ended;
+    private Date started;
+    private Date ended;
 
     private Long companyId;
 

@@ -3,7 +3,9 @@ package com.findmecore.findmecore.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author ShanilErosh
@@ -27,8 +29,8 @@ public class Experience {
     @JoinColumn(name = "employee_id")
     private Employee employee;
 
-    private LocalDateTime started;
-    private LocalDateTime ended;
+    private Date started;
+    private Date ended;
 
     private String position;
 

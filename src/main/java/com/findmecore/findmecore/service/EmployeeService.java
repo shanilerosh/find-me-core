@@ -1,6 +1,7 @@
 package com.findmecore.findmecore.service;
 
 import com.findmecore.findmecore.dto.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -8,7 +9,7 @@ import java.util.List;
  * @author ShanilErosh
  */
 public interface EmployeeService {
-    Boolean updateEmployeeBasicData(String empId, EmployeeDto employeeDto);
+    Boolean updateEmployeeBasicData(String empId, EmployeeDto employeeDto, MultipartFile file);
 
     EmployeeDto findEmployeeByUsername(String empId);
 
@@ -29,4 +30,12 @@ public interface EmployeeService {
     CourseDto fetchCourseRecord(String id);
 
     Boolean createEmployeeWithUserData(UserDto userDto);
+
+    String generateCv(String empId, CvUtilDto cvUtilDto);
+
+    List<SkillDto> generateSkills();
+
+    Boolean updateSkill(String empId, String skillId, SkillUtilDto skillUtilDto);
+
+    Boolean createSkill(String skillId, SkillUtilDto skillUtilDto);
 }

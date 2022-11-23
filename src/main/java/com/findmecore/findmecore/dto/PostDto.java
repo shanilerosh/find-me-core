@@ -19,6 +19,7 @@ public class PostDto implements Serializable {
     private String createdUser;
     private String postText;
     private String postImageDestination;
+    private String userImageDestination;
     private String timeFrom;
     private Long totalReactions;
     private Long totalComments;

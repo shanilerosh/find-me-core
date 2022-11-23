@@ -26,6 +26,10 @@ public class Connection implements Serializable {
     @JoinColumn(name = "connection_id")
     private Employer employer;
 
+    @ManyToOne
+    @JoinColumn(name = "employee_id")
+    private Employee followedEmployee;
+
 
 
 }

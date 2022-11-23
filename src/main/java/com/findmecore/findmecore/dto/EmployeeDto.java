@@ -18,6 +18,7 @@ public class EmployeeDto implements Serializable {
     private Date dob;
     private String email;
     private String linkedinProfile;
+    private String profilePicLocation;
     private String address;
     private String mobile;
 
@@ -43,10 +44,15 @@ public class EmployeeDto implements Serializable {
 
     private List<CourseDto> courseList;
     private List<ExperienceDto> experienceDtos;
+    private List<AbilityDto> abilityDtos;
 
 
     private String displayInstitute;
     private String currentCompany;
     private String currentPostion;
+
+    private String listOfConnections;
+    private String listOfPosts;
+    private String listOfFriends;
 
 }

@@ -1,0 +1,24 @@
+package com.findmecore.findmecore.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.io.Serializable;
+
+/**
+ * @author ShanilErosh
+ */
+@Data
+@Builder
+public class FriendCommonDto implements Serializable {
+
+    private Long friendId;
+    private String friendName;
+    private String friendPhoto;
+    private String friendPics;
+    private String friendEmpId;
+    private String friendInfo;
+    private boolean isFriend;
+
+
+}

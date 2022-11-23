@@ -8,6 +8,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author ShanilErosh
@@ -21,8 +22,8 @@ public class CourseDto {
     private String institute;
     private Long instituteId;
 
-    private LocalDateTime started;
-    private LocalDateTime ended;
+    private Date started;
+    private Date ended;
 
     private String courseName;
 
