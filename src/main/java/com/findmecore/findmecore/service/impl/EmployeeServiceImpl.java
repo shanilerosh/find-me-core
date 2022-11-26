@@ -409,6 +409,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public String generateCv(String empId, CvUtilDto cvUtilDto) throws IOException {
         int topHeadingFont = 35;
         int mediumFont = 15;
+        int mediumTitleFont = 11;
         int smallFont = 8;
 
          float LEADING = -1.5f * mediumFont;
@@ -444,7 +445,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         contentStream.setNonStrokingColor(Color.WHITE);
         contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
         contentStream.setLeading(14.5f);
-        contentStream.newLineAtOffset(20, 650);
+        contentStream.newLineAtOffset(30, 650);
 
         contentStream.showText(handleEmpty(employee.getName()));
 
@@ -483,6 +484,15 @@ public class EmployeeServiceImpl implements EmployeeService {
                 //Generate Skills Sections
 //
                 PDImageXObject pdImage = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\star.png",doc);
+
+                PDImageXObject phoneImage = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\phone.png",doc);
+                PDImageXObject homeImg = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\home.png",doc);
+
+                //x = 15 y= 621
+                contentStream.drawImage(phoneImage, 10, 590,11,11);
+                contentStream.drawImage(homeImg, 10, 590-25,11,11);
+        contentStream.drawImage(homeImg, 10, 590-25,11,11);
+
 
                 int originalStartInitX = 20;
                 int originalStartInitY = 410;
@@ -587,9 +597,113 @@ public class EmployeeServiceImpl implements EmployeeService {
                 contentStream.setFont(PDType1Font.COURIER, smallFont);
 
 
-                contentStream.newLineAtOffset(18, -150);
+                contentStream.newLineAtOffset(3, 15);
 
-                addParagraph(contentStream,380,"I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
+                addParagraph(contentStream,380,"Ut sodales arcu molestie, auctor ex rhoncus, consequat turpis. Donec vehicula suscipit vehicula. Vestibulum euismod sed eros ac accumsan. Aliquam ornare imperdiet dignissim. Suspendisse suscipit velit dapibus risus aliquam, ornare aliquet lorem placerat. Quisque est metus, blandit eu magna tempus, aliquam cursus est. Quisque varius nisi id lectus sodales facilisis. Donec placerat diam id quam bibendum auctor. Quisque dapibus odio at justo interdum pellentesque. Integer at risus ut lorem efficitur fermentum posuere tincidunt ex.");
+
+                contentStream.setLeading(20f);
+                contentStream.newLine();
+
+        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
+        contentStream.showText("Education");
+
+        contentStream.newLine();
+
+
+        for (Course course : employee.getCourse()) {
+            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.setFont(PDType1Font.TIMES_BOLD, mediumTitleFont);
+
+            contentStream.showText(course.getEducation().getInstitute());
+            contentStream.setLeading(10f);
+
+            contentStream.newLine();
+
+            //Fixed-Dont Change this
+            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.setFont(PDType1Font.TIMES_ROMAN, smallFont);
+
+
+            Calendar start = Calendar.getInstance();
+            Calendar end = Calendar.getInstance();
+
+
+            start.setTime(course.getStarted());
+            end.setTime(course.getEnded());
+            contentStream.showText(course.getCourseName()+" | "+start.get(Calendar.YEAR) + " - " +
+                    end.get(Calendar.YEAR));
+
+            contentStream.setLeading(20f);
+            contentStream.newLine();
+        }
+
+        contentStream.setLeading(25f);
+        contentStream.newLine();
+
+
+        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
+        contentStream.showText("Experience");
+
+        contentStream.newLine();
+
+
+        for (Experience experience : employee.getExperiences()) {
+            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.setFont(PDType1Font.TIMES_BOLD, mediumTitleFont);
+
+            contentStream.showText(experience.getCompanyMst().getCompanyName());
+            contentStream.setLeading(10f);
+
+            contentStream.newLine();
+
+            //Fixed-Dont Change this
+            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.setFont(PDType1Font.TIMES_ROMAN, smallFont);
+
+
+            Calendar start = Calendar.getInstance();
+            Calendar end = Calendar.getInstance();
+
+
+            start.setTime(experience.getStarted());
+            end.setTime(experience.getEnded());
+            contentStream.showText(experience.getPosition()+" | "+start.get(Calendar.YEAR) + " - " +
+                    end.get(Calendar.YEAR));
+
+            contentStream.setLeading(20f);
+            contentStream.newLine();
+        }
+
+        contentStream.setLeading(25f);
+        contentStream.newLine();
+
+
+        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
+        contentStream.showText("Other Remarks");
+
+
+        contentStream.newLine();
+
+        addParagraph(contentStream,380,"I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
+
+        contentStream.setLeading(25f);
+        contentStream.newLine();
+
+
+        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
+        contentStream.showText("Extracurricular Activities");
+
+
+        contentStream.newLine();
+
+        addParagraph(contentStream,380,"I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
+
+
+
 
 
 
