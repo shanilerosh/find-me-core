@@ -21,17 +21,21 @@ public class NotificationMst {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long notificationId;
     private String message;
+    private String party;
     private LocalDateTime timeAgo;
     private boolean readStatus;
     private String type;
     private long receiverId;
     private long creatorId;
+    @Column(nullable=false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isRead;
 
-    private boolean shooterProfilePic;
-    private boolean shooterProfileName;
+    private String shooterProfilePic;
+    private String shooterProfileName;
 
-    private boolean receiverProfilePic;
-    private boolean receiverProfileName;
+    private String receiverProfilePic;
+    private String receiverProfileName;
+
+    private boolean isPositive;
 
 }

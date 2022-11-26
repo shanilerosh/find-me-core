@@ -54,4 +54,12 @@ public class User implements Serializable {
     @JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "USER_ID") }, inverseJoinColumns = { @JoinColumn(name = "ROLE_ID") })
     private Set<Role> roles;
 
+    @OneToOne(targetEntity = Employee.class)
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+    @OneToOne(targetEntity = Employer.class)
+    @JoinColumn(name = "employer_id")
+    private Employee employer;
+
 }

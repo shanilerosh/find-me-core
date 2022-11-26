@@ -18,6 +18,7 @@ import java.io.Serializable;
 public class NotificationDto implements Serializable {
 
     private String message;
+    private String party;
     private String timeAgo;
     private boolean readStatus;
     private long notificationId;
@@ -26,10 +27,12 @@ public class NotificationDto implements Serializable {
     private long creatorId;
     @JsonProperty("isRead")
     private boolean isRead;
+    @JsonProperty("isPositive")
+    private boolean isPositive;
 
     private String shooterProfilePic;
     private String shooterProfileName;
 
-    private boolean receiverProfilePic;
-    private boolean receiverProfileName;
+    private String receiverProfilePic;
+    private String receiverProfileName;
 }

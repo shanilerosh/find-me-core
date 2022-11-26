@@ -2,12 +2,10 @@ package com.findmecore.findmecore.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.findmecore.findmecore.dto.*;
-import com.findmecore.findmecore.entity.Comment;
-import com.findmecore.findmecore.entity.Employee;
-import com.findmecore.findmecore.entity.Post;
-import com.findmecore.findmecore.entity.Reaction;
+import com.findmecore.findmecore.entity.*;
 import com.findmecore.findmecore.exceptions.BadRequestException;
 import com.findmecore.findmecore.repo.*;
+import com.findmecore.findmecore.service.EmployeeService;
 import com.findmecore.findmecore.service.NotificationService;
 import com.findmecore.findmecore.service.PostService;
 import com.findmecore.findmecore.utility.StringUtils;
@@ -50,6 +48,7 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private NotificationService notificationService;
+
 
 
     @Override
@@ -125,13 +124,56 @@ public class PostServiceImpl implements PostService {
                 .collect(Collectors.toList());
     }
 
+    private FriendCommonDto getFriendCommonDto(Friend obj) {
+        Employee friendProfile = obj.getFriend();
+        return FriendCommonDto.builder()
+                .friendId(obj.getId()).friendEmpId(friendProfile.getEmployeeId()).
+                        friendInfo(friendProfile.getAboutMe()).isFriend(obj.getFriendStatus().equals(FriendStatus.FRIENDS))
+                .friendPhoto(friendProfile.getProfilePicLocation())
+                .friendName(friendProfile.getName())
+                .friendEmail(friendProfile.getEmail())
+                .build();
+    }
+
+    private FriendCommonDto getFriendCommonDto(Friend obj, boolean flag) {
+        Employee friendProfile = obj.getCurrentEmployee();
+        return FriendCommonDto.builder()
+                .friendId(obj.getId()).friendEmpId(friendProfile.getEmployeeId()).
+                        friendInfo(friendProfile.getAboutMe()).isFriend(obj.getFriendStatus().equals(FriendStatus.FRIENDS))
+                .friendPhoto(friendProfile.getProfilePicLocation())
+                .friendName(friendProfile.getName())
+                .friendEmail(friendProfile.getEmail())
+                .build();
+    }
+
+
+    public List<FriendCommonDto> findFriendsByEmployeeAndStatus(Employee employeeById, FriendStatus status) {
+        List<FriendCommonDto> friendList = friendRepository.findAllByCurrentEmployeeAndFriendStatus(employeeById, status)
+                .stream().map(this::getFriendCommonDto).collect(Collectors.toList());
+
+        //f both are friends should be taken from other side
+        if(status == FriendStatus.FRIENDS) {
+
+            List<FriendCommonDto> otherFriendSet = friendRepository.findAllByFriendAndFriendStatus(employeeById, status)
+                    .stream().map(obj -> getFriendCommonDto(obj, false)).collect(Collectors.toList());
+
+            LinkedHashSet<FriendCommonDto> hashSet = new LinkedHashSet<>(friendList);
+            hashSet.addAll(otherFriendSet);
+
+            return new ArrayList<>(hashSet);
+        }
+        return friendList;
+    }
+
     private List<PostDto> findPostsByEmployeeFriends(Employee employee) {
 
-        List<FriendDto> listOfFriends = getCurrentFriendListOfAnEmployee(employee);
+
+        List<FriendCommonDto> friendsByEmployeeAndStatus = findFriendsByEmployeeAndStatus(employee, FriendStatus.FRIENDS);
+
 
         return postRepository.findAll().stream().sorted(Comparator.comparing(Post::getCreatedDateTime)
                 .reversed()).
-                filter(obj -> listOfFriends.stream().anyMatch(friend -> friend.getFriendId().equals(obj.getEmployee().getEmployeeId())))
+                filter(obj -> friendsByEmployeeAndStatus.stream().anyMatch(friend -> !friend.getFriendEmpId().equals(employee.getEmployeeId()) && friend.getFriendEmpId().equals(obj.getEmployee().getEmployeeId())))
                 .map(obj -> getPostsDto(employee, obj)).
                 collect(Collectors.toList());
     }
@@ -205,6 +247,7 @@ public class PostServiceImpl implements PostService {
                 .creatorId(employee.getEmployeeId())
                 .shooterProfileName(employee.getName())
                 .shooterProfilePic(employee.getProfilePicLocation())
+                .party(Role.ROLE_EMPLOYEE)
                 .build();
         notificationService.createNotification(notificationDto);
         return Boolean.TRUE;

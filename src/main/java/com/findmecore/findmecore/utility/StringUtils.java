@@ -18,5 +18,6 @@ import java.util.stream.Collectors;
 public class StringUtils {
 
     public static String IMAGE_SAVE_LOCATION_POST = "C:\\Users\\Admin\\Desktop\\Final Project FInalization\\argon-dashboard-angular-master\\src\\assets\\img\\posts\\";
+    public static String IMAGE_SAVE_LOCATION_PDF_UTIL = "C:\\Users\\Admin\\Desktop\\Final Project FInalization\\argon-dashboard-angular-master\\src\\";
     public static String FRONT_DESTINATION = "assets\\img\\posts\\";
 }

@@ -6,10 +6,12 @@ import com.findmecore.findmecore.dto.*;
 import com.findmecore.findmecore.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -87,9 +89,9 @@ public class EmployeeController {
 
     }
 
-    @PostMapping("/cv/{empId}")
-    public ResponseEntity<String> generateCv(@PathVariable String empId, @RequestBody CvUtilDto cvUtilDto) {
-        return ResponseEntity.ok(employeeService.generateCv(empId, cvUtilDto));
+    @GetMapping("/cv/{empId}")
+    public ResponseEntity<String> generateCv(@PathVariable String empId) throws IOException {
+        return ResponseEntity.ok(employeeService.generateCv(empId, null));
 
     }
 
@@ -114,11 +116,40 @@ public class EmployeeController {
 
 
     @GetMapping("/friend/{empId}/{status}")
-    public ResponseEntity<List<FriendCommonDto>> filterFriends() {
-        return ResponseEntity.ok(employeeService.generateSkills());
+    public ResponseEntity<List<FriendCommonDto>> filterFriends(@PathVariable String empId,@PathVariable String status) {
+        return ResponseEntity.ok(employeeService.filterFriends(empId, status));
+    }
+
+    @GetMapping("/friend/react/{friendshipId}/{status}")
+    public ResponseEntity<Boolean> acceptRejectFriends(@PathVariable String friendshipId,@PathVariable String status) {
+        return ResponseEntity.ok(employeeService.acceptRejectFriendship(friendshipId, status));
     }
 
 
+//    @PutMapping("/skill/{empId}/{skillId}")
+//    public ResponseEntity<Boolean> updateSkill(@PathVariable String empId, @PathVariable String skillId, @RequestBody SkillUtilDto skillUtilDto) {
+//        return ResponseEntity.ok(employeeService.updateSkill(empId,skillId, skillUtilDto));
+//    }
 
 
+    @PostMapping("/ability/{empId}")
+    public ResponseEntity<Boolean> createAbility(@PathVariable String empId, @RequestBody AbilityDto abilityDto) {
+        return ResponseEntity.ok(employeeService.createAbiltiy(empId, abilityDto));
+    }
+
+    @PutMapping("/ability/{abilityId}")
+    public ResponseEntity<Boolean> updateAbility(@PathVariable String abilityId,
+                                                 @RequestBody AbilityDto abilityDto) {
+        return ResponseEntity.ok(employeeService.updateAbility(abilityId, abilityDto));
+    }
+
+    @DeleteMapping("/ability/{abilityId}")
+    public ResponseEntity<Boolean> deleteAbility(@PathVariable String abilityId) {
+        return ResponseEntity.ok(employeeService.deleteAbility(abilityId));
+    }
+
+    @GetMapping("/ability/{id}")
+    public ResponseEntity<AbilityDto> fetchAbilityRecord(@PathVariable String id) {
+        return ResponseEntity.ok(employeeService.fetchAbiltiyRecord(id));
+    }
 }

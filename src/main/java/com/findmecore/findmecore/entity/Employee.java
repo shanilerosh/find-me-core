@@ -81,4 +81,7 @@ public class Employee implements Serializable {
     private String profilePicLocation;
     private Boolean isUpdatedForTheFirstTime;
 
+
+    private String profileInformation;
+
 }

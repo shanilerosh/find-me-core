@@ -5,7 +5,7 @@ package com.findmecore.findmecore.dto;
  */
 public enum FriendStatus {
 
-    REQUESTED("REQUESTED"),FRIENDS("FRIENDS");
+    REQUESTED("REQUESTED"),FRIENDS("FRIENDS"),REJECTED("REJECTED");
 
     private String providerType;
 

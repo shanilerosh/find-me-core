@@ -6,6 +6,8 @@ import com.findmecore.findmecore.dto.*;
 import com.findmecore.findmecore.entity.*;
 import com.findmecore.findmecore.exceptions.BadRequestException;
 import com.findmecore.findmecore.repo.*;
+import com.findmecore.findmecore.service.MessageService;
+import com.findmecore.findmecore.service.NotificationService;
 import com.findmecore.findmecore.utility.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +51,11 @@ public class ChatController {
     @Autowired
     private CommentRepository commentRepository;
 
-    private SimpMessagingTemplate template;
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private MessageService messageService;
 
     @Autowired
     private ChatRepository chatRepository;
@@ -67,6 +73,23 @@ public class ChatController {
                 .sendingEmployee(senderEmployee).build();
 
         chatRepository.save(chatEntry);
+
+        //trigger notification and send message to the socket
+        NotificationDto notificationDto = NotificationDto.builder().shooterProfilePic(senderEmployee.getProfilePicLocation())
+                .shooterProfileName(senderEmployee.getName())
+                .creatorId(senderEmployee.getEmployeeId())
+                .receiverId(receivedEmployee.getEmployeeId())
+                .isRead(false).message("You received a message from "+ senderEmployee.getName())
+                .type("message")
+                .party(Role.ROLE_EMPLOYEE)
+                .isPositive(true).build();
+
+        //create msg dto
+        MessageDto msgDto = MessageDto.builder().receivedId(receivedEmployee.getEmployeeId())
+                .content(chatObj.getChatContent()).shooterId(senderEmployee.getEmployeeId()).build();
+
+        notificationService.createNotification(notificationDto);
+        messageService.createMsg(msgDto);
 
 
         return ResponseEntity.ok(Boolean.TRUE);

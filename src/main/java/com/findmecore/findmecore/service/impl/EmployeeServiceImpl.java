@@ -6,28 +6,49 @@ import com.findmecore.findmecore.exceptions.BadRequestException;
 import com.findmecore.findmecore.exceptions.UserAlreadyExistAuthenticationException;
 import com.findmecore.findmecore.repo.*;
 import com.findmecore.findmecore.service.EmployeeService;
+import com.findmecore.findmecore.service.NotificationService;
 import com.findmecore.findmecore.service.PostService;
 import com.findmecore.findmecore.utility.StringUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
+import java.awt.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.module.ResolutionException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 /**
  * @author ShanilErosh
  */
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
+
+
+    private  final PDFont FONT = PDType1Font.COURIER;
+    private  final float FONT_SIZE =8;
+    private  final float LEADING = -1.5f * FONT_SIZE;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -61,6 +82,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private AbilityRepository abilityRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public Boolean updateEmployeeBasicData(String empId, EmployeeDto employeeDto, MultipartFile file) {
@@ -133,7 +157,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private List<AbilityDto> fetchAbilitiesByEmployee(String empId, Employee employee) {
         return abilityRepository
                 .findAllByEmployee(employee)
-                .stream().map(obj -> AbilityDto.builder().rating(obj.getRating()).skillName(obj.getSkill().getSkillName()).id(obj.getId()).empId(empId).build())
+                .stream().map(obj -> AbilityDto.builder().rating(obj.getRating()).skillName(obj.getSkill().getSkillName()).id(obj.getId()).empId(empId)
+                        .skillId(obj.getSkill().getId()).build())
                 .collect(Collectors.toList());
     }
 
@@ -226,6 +251,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Boolean updateExperience(String expId, ExpUtil expUtil) {
 
+        checkIfDateIsBelow(expUtil.getStartDate(), expUtil.getEndDate());
+
         Experience experience = experienceRepository.findById(Long.valueOf(expId))
                 .orElseThrow(() -> {
                     throw new BadRequestException("No experience found with the record");
@@ -267,6 +294,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Boolean updateEducation(String expId, EdUtil expUtil) {
+
+        checkIfDateIsBelow(expUtil.getStarted(), expUtil.getEnded());
+
         Course course = courseRepository.findById(Long.valueOf(expId))
                 .orElseThrow(() -> {
                     throw new BadRequestException("No experience found with the record");
@@ -290,6 +320,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Boolean createExperience(String empId, ExpUtil expUtil) {
+
+        //validate days
+        checkIfDateIsBelow(expUtil.getStartDate(), expUtil.getEndDate());
+
         Employee employee = employeeRepository.findById(Long.valueOf(empId))
                 .orElseThrow(() -> {
                     throw new BadRequestException("No employee found with the record");
@@ -315,6 +349,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Boolean createEducation(String empId, EdUtil expUtil) {
+
+        checkIfDateIsBelow(expUtil.getStarted(), expUtil.getEnded());
+
         Employee employee = employeeRepository.findById(Long.valueOf(empId))
                 .orElseThrow(() -> {
                     throw new BadRequestException("No employee found with the record");
@@ -369,190 +406,202 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public String generateCv(String empId, CvUtilDto cvUtilDto) {
+    public String generateCv(String empId, CvUtilDto cvUtilDto) throws IOException {
         int topHeadingFont = 35;
         int mediumFont = 15;
         int smallFont = 8;
 
+         float LEADING = -1.5f * mediumFont;
+
+
+
 //        EmployeeDto employee = findEmployeeByUsername(empId);
+        Employee employee = findEmployeeById(empId);
+
+        PDDocument doc = new PDDocument();
+        PDPage pdPage = new PDPage();
+        doc.addPage(pdPage);
+        PDPageContentStream contentStream = new PDPageContentStream(doc, pdPage);
+
+
+        List<Ability> employeeSkills = abilityRepository.findAllByEmployee(employee);
+
+
+        //left colored section
+        contentStream.setNonStrokingColor(Color.DARK_GRAY);
+        contentStream.addRect(0, 0, 200, 900);
+        contentStream.fill();
+
+
+        //set profile picture
+        PDImageXObject profileImg = PDImageXObject.createFromFile(StringUtils.IMAGE_SAVE_LOCATION_PDF_UTIL+employee.getProfilePicLocation(),doc);
+        contentStream.drawImage(profileImg,20, 680,100,100);
+
+
+        contentStream.beginText();
+
+        //Side Bar Text Generation
+        contentStream.setNonStrokingColor(Color.WHITE);
+        contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
+        contentStream.setLeading(14.5f);
+        contentStream.newLineAtOffset(20, 650);
+
+        contentStream.showText(handleEmpty(employee.getName()));
+
+        contentStream.newLine();
+        contentStream.newLine();
+
+        contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+        contentStream.showText("Contact Me At");
+
+        contentStream.newLine();
+        contentStream.newLine();
+
+        contentStream.setFont(PDType1Font.TIMES_ROMAN, 8);
+        contentStream.setLeading(25f);
+
+        //personal Data
+        contentStream.showText(handleEmpty(employee.getMobile()));
+        contentStream.newLine();
+        contentStream.showText(handleEmpty(employee.getAddress()));
+        contentStream.newLine();
+        contentStream.showText(handleEmpty(employee.getAddress()));
+        contentStream.newLine();
+        contentStream.showText(handleEmpty(employee.getEmail()));
+        contentStream.newLine();
+        contentStream.showText(handleEmpty(employee.getLinkedinProfile()));
+
+                //skills section
+                contentStream.newLine();
+                contentStream.newLine();
+
+                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+                contentStream.showText("Skills");
+
+                contentStream.endText();
+
+                //Generate Skills Sections
 //
-//        try (PDDocument doc = new PDDocument()) {
-//            PDPage pdPage = new PDPage();
-//            doc.addPage(pdPage);
-//
-//            try (PDPageContentStream contentStream = new PDPageContentStream(doc, pdPage)) {
-//
-//
-//                List<Ability> employeeSkills = abilityRepository.findAllByEmployee(employee);
-//
-//
-//                //left colored section
-//                contentStream.setNonStrokingColor(Color.DARK_GRAY);
-//                contentStream.addRect(0, 0, 200, 900);
-//                contentStream.fill();
-//
-//                contentStream.beginText();
-//
-//
-//                //Side Bar Text Generation
-//                contentStream.setNonStrokingColor(Color.WHITE);
-//                contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
-//                contentStream.setLeading(14.5f);
-//                contentStream.newLineAtOffset(90, 700);
-//
-//                contentStream.showText(employee.getName());
-//
-//                contentStream.newLine();
-//                contentStream.newLine();
-//
-//                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-//                contentStream.showText("Contact Me At");
-//
-//                contentStream.newLine();
-//                contentStream.newLine();
-//
-//                contentStream.setFont(PDType1Font.TIMES_ROMAN, 8);
-//                contentStream.setLeading(25f);
-//
-//                //personal Data
-//                contentStream.showText(employee.getMobile());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getAddress());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getAddress());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getEmail());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getLinkedinProfile());
-//
-//                //skills section
-//                contentStream.newLine();
-//                contentStream.newLine();
-//
-//                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-//                contentStream.showText("Skills");
-//
-//                contentStream.endText();
-//
-//                //Generate Skills Sections
-////
-//                PDImageXObject pdImage = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\star.png",doc);
-//
-//                int originalStartInitX = 40;
-//                int originalStartInitY = 450;
-//
-//                int starInitX = originalStartInitX;
-//                int starInitY = originalStartInitY;
-//                int horizontalIncrementor = 15;
-//                int startSpace = 15;
-//
-//                for (Ability employeeSkill : employeeSkills) {
-//                    //Side Bar Text Generation
-//                    for (int i = 0; i < employeeSkill.getRating(); i++) {
-//                        contentStream.drawImage(pdImage,starInitX, starInitY,10,10);
-//                        starInitX += startSpace;
-//                    }
-//                    starInitX = originalStartInitX;
-//                    starInitY-=horizontalIncrementor;
-//                }
-//
-//                //Skill title set
-//                int skillIncrementorX = originalStartInitX+60;
-//                int skillIncrementorY = originalStartInitY;
-//
-//                contentStream.beginText();
-//
-//                contentStream.setNonStrokingColor(Color.WHITE);
-//                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
-//                contentStream.newLineAtOffset(skillIncrementorX, skillIncrementorY);
-//                contentStream.setLeading(horizontalIncrementor);
-//
-//                for (Ability employeeSkill : employeeSkills) {
-//                    contentStream.showText(employeeSkill.getSkill().getSkillName());
-//                    contentStream.newLine();
-//                    skillIncrementorY-=horizontalIncrementor;
-//                }
-//
-//                contentStream.newLine();
-//                contentStream.newLine();
-//
-//                contentStream.moveTextPositionByAmount(-60, 0);
-//
-//
-//                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-//                contentStream.showText("Non Related Refrees");
-//
-//                contentStream.newLine();
-//                contentStream.newLine();
-//
-//
-//                contentStream.showText(employee.getRef1());
-//                contentStream.newLine();
-//
-//                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
-//                contentStream.showText(employee.getRef1Position());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getRef1Address());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getRef1Mobile());
-//
-//                contentStream.newLine();
-//                contentStream.newLine();
-//
-//                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-//                contentStream.showText(employee.getRef1());
-//                contentStream.newLine();
-//
-//                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
-//                contentStream.showText(employee.getRef1Position());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getRef1Address());
-//                contentStream.newLine();
-//                contentStream.showText(employee.getRef1Mobile());
-//
-//                contentStream.endText();
-//
-//                //Side Bar End
-//
-//
-//                //Profile Section
-//                contentStream.beginText();
-//                int startingProfileCordinateX = 220;
-//                int startingProfileCordinateY = 720;
-//
-//
-//                contentStream.setNonStrokingColor(Color.GRAY);
-//                contentStream.setFont(PDType1Font.TIMES_BOLD, 35);
-//                contentStream.setLeading(35f);
-//                contentStream.newLineAtOffset(startingProfileCordinateX, startingProfileCordinateY);
-//
-//                //Main Heading Name
-//                contentStream.showText("Shanil Miranda");
-//
-//                contentStream.newLine();
-//
-//                contentStream.setNonStrokingColor(Color.GRAY);
-//                contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
-//                contentStream.showText("Personal Profile");
-//
-//                contentStream.newLine();
-//
-//                contentStream.setNonStrokingColor(Color.BLACK);
-//                contentStream.setFont(PDType1Font.COURIER, smallFont);
-//                contentStream.showText("I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
-//
-//
-//
-//                contentStream.endText();
-//
-//            }
-//
-//            doc.save("C:\\Users\\Admin\\Desktop\\C#\\doc.pdf");
-//
-//        } catch (IOException ioException) {
-//            System.out.println("Handling IOException...");
-//        }
-        return "";
+                PDImageXObject pdImage = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\star.png",doc);
+
+                int originalStartInitX = 20;
+                int originalStartInitY = 410;
+
+                int starInitX = originalStartInitX;
+                int starInitY = originalStartInitY;
+                int horizontalIncrementor = 15;
+                int startSpace = 15;
+
+                for (Ability employeeSkill : employeeSkills) {
+                    //Side Bar Text Generation
+                    for (int i = 0; i < employeeSkill.getRating(); i++) {
+                        contentStream.drawImage(pdImage,starInitX, starInitY,5,5);
+                        starInitX += startSpace;
+                    }
+                    starInitX = originalStartInitX;
+                    starInitY-=horizontalIncrementor;
+                }
+
+                //Skill title set
+                int skillIncrementorX = originalStartInitX+75;
+                int skillIncrementorY = originalStartInitY;
+
+                contentStream.beginText();
+
+                contentStream.setNonStrokingColor(Color.WHITE);
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
+                contentStream.newLineAtOffset(skillIncrementorX, skillIncrementorY);
+                contentStream.setLeading(horizontalIncrementor);
+
+                for (Ability employeeSkill : employeeSkills) {
+                    contentStream.showText(handleEmpty(employeeSkill.getSkill().getSkillName()));
+                    contentStream.newLine();
+                    skillIncrementorY-=horizontalIncrementor;
+                }
+
+                contentStream.newLine();
+                contentStream.newLine();
+
+                contentStream.moveTextPositionByAmount(-60, 0);
+
+
+                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+                contentStream.showText("Non Related Refrees");
+
+                contentStream.newLine();
+                contentStream.newLine();
+
+
+                contentStream.showText(handleEmpty(employee.getRef1()));
+                contentStream.newLine();
+
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
+                contentStream.showText(handleEmpty(employee.getRef1Position()));
+                contentStream.newLine();
+                contentStream.showText(handleEmpty(employee.getRef1Address()));
+                contentStream.newLine();
+                contentStream.showText(handleEmpty(employee.getRef1Mobile()));
+
+                contentStream.newLine();
+                contentStream.newLine();
+
+                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+                contentStream.showText(handleEmpty(employee.getRef1()));
+                contentStream.newLine();
+
+                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
+                contentStream.showText(handleEmpty(employee.getRef1Position()));
+                contentStream.newLine();
+                contentStream.showText(handleEmpty(employee.getRef1Address()));
+                contentStream.newLine();
+                contentStream.showText(handleEmpty(employee.getRef1Mobile()));
+
+                contentStream.endText();
+
+                //Side Bar End
+
+
+                //Profile Section
+                contentStream.beginText();
+                int startingProfileCordinateX = 220;
+                int startingProfileCordinateY = 720;
+
+
+                contentStream.setNonStrokingColor(Color.GRAY);
+                contentStream.setFont(PDType1Font.TIMES_BOLD, 35);
+                contentStream.setLeading(35f);
+                contentStream.newLineAtOffset(startingProfileCordinateX, startingProfileCordinateY);
+
+                //Main Heading Name
+                contentStream.showText("Shanil Miranda");
+
+                contentStream.newLine();
+
+                contentStream.setNonStrokingColor(Color.GRAY);
+                contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
+                contentStream.showText("Personal Profile");
+
+                contentStream.newLine();
+
+                contentStream.setNonStrokingColor(Color.BLACK);
+                contentStream.setFont(PDType1Font.COURIER, smallFont);
+
+
+                contentStream.newLineAtOffset(18, -150);
+
+                addParagraph(contentStream,380,"I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
+
+
+
+            contentStream.endText();
+
+            contentStream.close();
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            doc.save(stream);
+            doc.close();
+
+        return Base64.getEncoder().encodeToString(stream.toByteArray());
     }
 
     @Override
@@ -583,6 +632,225 @@ public class EmployeeServiceImpl implements EmployeeService {
         return Boolean.TRUE;
     }
 
+    @Override
+    public List<FriendCommonDto> filterFriends(String empId, String status) {
+
+        Employee employeeById = findEmployeeById(empId);
+
+        FriendStatus friendStatus = FriendStatus.valueOf(status);
+        return findFriendsByEmployeeAndStatus(employeeById, friendStatus);
+    }
+
+    @Override
+    public Boolean acceptRejectFriendship(String friendshipId, String status) {
+
+        Friend friend = findFriendByFriendshipId(friendshipId);
+
+        friend.setFriendStatus(FriendStatus.valueOf(status));
+        Friend save = friendRepository.save(friend);
+
+
+        NotificationDto notificationDto = NotificationDto.builder().shooterProfilePic(friend.getCurrentEmployee().getProfilePicLocation())
+                .shooterProfileName(friend.getCurrentEmployee().getName())
+                .creatorId(friend.getId())
+                .receiverId(friend.getFriend().getEmployeeId())
+                .type("non-msg")
+                .party(Role.ROLE_EMPLOYEE)
+                .isRead(false).message(friend.getCurrentEmployee().getName() + ((status.equals(FriendStatus.FRIENDS.toString()) ?
+                        " accepted " : " rejected ") + "your friend request"))
+                .isPositive(status.equals(FriendStatus.FRIENDS.toString())).build();
+
+        notificationService.createNotification(notificationDto);
+
+        return true;
+    }
+
+    private Friend findFriendByFriendshipId(String friendshipId) {
+        return friendRepository.findById(Long.valueOf(friendshipId))
+                .orElseThrow(() -> {
+                    throw new RuntimeException("Friendship not found");
+                });
+    }
+
+    @Override
+    public List<FriendCommonDto> findFriendsByEmployeeAndStatus(Employee employeeById, FriendStatus status) {
+        List<FriendCommonDto> friendList = friendRepository.findAllByCurrentEmployeeAndFriendStatus(employeeById, status)
+                .stream().map(this::getFriendCommonDto).collect(Collectors.toList());
+
+        //f both are friends should be taken from other side
+        if(status == FriendStatus.FRIENDS) {
+
+            List<FriendCommonDto> otherFriendSet = friendRepository.findAllByFriendAndFriendStatus(employeeById, status)
+                    .stream().map(obj -> getFriendCommonDto(obj, false)).collect(Collectors.toList());
+
+            LinkedHashSet<FriendCommonDto> hashSet = new LinkedHashSet<>(friendList);
+            hashSet.addAll(otherFriendSet);
+
+            return new ArrayList<>(hashSet);
+        }
+        return friendList;
+    }
+
+    @Override
+    public Boolean createAbiltiy(String empId, AbilityDto abilityDto) {
+        Employee employeeById = findEmployeeById(empId);
+        Skill skill = findSkillById(abilityDto.getSkillId());
+
+        Optional<Ability> isDuplicated = abilityRepository.findByEmployeeAndSkill(employeeById, skill);
+
+        Ability ability;
+
+        if(isDuplicated.isPresent()) {
+            ability = isDuplicated.get();
+            ability.setRating(abilityDto.getRating());
+        }else{
+            ability = Ability.builder().employee(employeeById)
+                    .skill(skill).rating(abilityDto.getRating())
+                    .build();
+        }
+        abilityRepository.save(ability);
+        return true;
+    }
+
+    @Override
+    public Boolean updateAbility(String abilityId, AbilityDto abilityDto) {
+
+        Ability ability = findABilityById(abilityId);
+
+        Skill skill = findSkillById(abilityDto.getSkillId());
+
+        ability.setSkill(skill);
+        ability.setRating(abilityDto.getRating());
+
+        abilityRepository.save(ability);
+        return true;
+    }
+
+    @Override
+    public Boolean deleteAbility(String abilityId) {
+
+        Ability ability = findABilityById(abilityId);
+        abilityRepository.delete(ability);
+
+        return true;
+    }
+
+    @Override
+    public AbilityDto fetchAbiltiyRecord(String id) {
+
+        Ability ability = findABilityById(id);
+        return converAbilityEntitytoDto(ability);
+    }
+
+    private AbilityDto converAbilityEntitytoDto(Ability ability) {
+        return AbilityDto.builder()
+                .skillId(ability.getSkill().getId()).skillName(ability.getSkill().getSkillName())
+                .rating(ability.getRating()).id(ability.getId()).build();
+    }
+
+    /**
+     * Find an employee by id
+     * @param abilityId
+     * @return
+     */
+    private Ability findABilityById(String abilityId) {
+        return abilityRepository.findById(Long.valueOf(abilityId))
+                .orElseThrow(() -> {
+                    throw new RuntimeException("Ability not found");
+                });
+    }
+
+    /**
+     * Find a skill by id
+     * @param skillId
+     * @return
+     */
+    private Skill findSkillById(String skillId) {
+        return skillRepository.findById(Long.valueOf(skillId))
+                .orElseThrow(() -> {
+                    throw new RuntimeException("Skill not found");
+                });
+    }
+
+    private void addParagraph(PDPageContentStream contentStream, float width,String text) throws IOException {
+        addParagraph(contentStream, width, text, false);
+    }
+
+    private void addParagraph(PDPageContentStream contentStream, float width, String text, boolean justify) throws IOException {
+        List<String> lines = parseLines(text, width);
+        contentStream.setFont(PDType1Font.COURIER, 8);
+        for (String line: lines) {
+            float charSpacing = 0;
+            if (justify){
+                if (line.length() > 1) {
+                    float size = 8 * PDType1Font.COURIER.getStringWidth(line) / 1000;
+                    float free = width - size;
+                    if (free > 0 && !lines.get(lines.size() - 1).equals(line)) {
+                        charSpacing = free / (line.length() - 1);
+                    }
+                }
+            }
+            //contentStream.s(charSpacing);
+            contentStream.showText(line);
+            contentStream.newLineAtOffset(0, LEADING);
+        }
+    }
+
+    private List<String> parseLines(String text, float width) throws IOException {
+        List<String> lines = new ArrayList<String>();
+        int lastSpace = -1;
+        while (text.length() > 0) {
+            int spaceIndex = text.indexOf(' ', lastSpace + 1);
+            if (spaceIndex < 0)
+                spaceIndex = text.length();
+            String subString = text.substring(0, spaceIndex);
+            float size = FONT_SIZE * FONT.getStringWidth(subString) / 1000;
+            if (size > width) {
+                if (lastSpace < 0){
+                    lastSpace = spaceIndex;
+                }
+                subString = text.substring(0, lastSpace);
+                lines.add(subString);
+                text = text.substring(lastSpace).trim();
+                lastSpace = -1;
+            } else if (spaceIndex == text.length()) {
+                lines.add(text);
+                text = "";
+            } else {
+                lastSpace = spaceIndex;
+            }
+        }
+        return lines;
+    }
+
+
+    /**
+     * Create freind commonddto by a friend enttiy obj
+     * @param obj
+     * @return
+     */
+    private FriendCommonDto getFriendCommonDto(Friend obj) {
+        Employee friendProfile = obj.getFriend();
+        return FriendCommonDto.builder()
+                .friendId(obj.getId()).friendEmpId(friendProfile.getEmployeeId()).
+                        friendInfo(friendProfile.getAboutMe()).isFriend(obj.getFriendStatus().equals(FriendStatus.FRIENDS))
+                .friendPhoto(friendProfile.getProfilePicLocation())
+                .friendName(friendProfile.getName())
+                .friendEmail(friendProfile.getEmail())
+                .build();
+    }
+
+    private FriendCommonDto getFriendCommonDto(Friend obj, boolean flag) {
+        Employee friendProfile = obj.getCurrentEmployee();
+        return FriendCommonDto.builder()
+                .friendId(obj.getId()).friendEmpId(friendProfile.getEmployeeId()).
+                        friendInfo(friendProfile.getAboutMe()).isFriend(obj.getFriendStatus().equals(FriendStatus.FRIENDS))
+                .friendPhoto(friendProfile.getProfilePicLocation())
+                .friendName(friendProfile.getName())
+                .friendEmail(friendProfile.getEmail())
+                .build();
+    }
+
     private void isSkillAlreadyExist(Employee employee, Skill skill) {
         abilityRepository.findAllByEmployee(employee)
                 .stream().filter(obj -> obj.getSkill().getId().equals(skill.getId())).findAny().ifPresent(c-> {
@@ -595,5 +863,15 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .orElseThrow(() -> {
                     throw new RuntimeException("Skill not found");
                 });
+    }
+
+    private void checkIfDateIsBelow(Date start, Date end) {
+        if(start.after(end)) {
+            throw new RuntimeException("Your start date cannot be before your end date");
+        }
+    }
+
+    private String handleEmpty(String data) {
+        return data == null ? "-" : data;
     }
 }

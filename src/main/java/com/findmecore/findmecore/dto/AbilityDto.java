@@ -14,4 +14,5 @@ public class AbilityDto {
     private String skillName;
     private long rating;
     private String empId;
+    private long skillId;
 }
