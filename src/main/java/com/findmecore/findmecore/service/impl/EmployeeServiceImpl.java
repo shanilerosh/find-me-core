@@ -472,7 +472,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         contentStream.newLine();
         contentStream.showText(handleEmpty(employee.getAddress()));
         contentStream.newLine();
-        contentStream.showText(handleEmpty(employee.getAddress()));
+        contentStream.showText(handleEmpty(employee.getTown()));
         contentStream.newLine();
         contentStream.showText(handleEmpty(employee.getEmail()));
         contentStream.newLine();
@@ -483,7 +483,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 contentStream.newLine();
 
                 contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-                contentStream.showText("Skills");
+                contentStream.showText("<h1>Skills</h1>");
 
                 contentStream.endText();
 
@@ -493,11 +493,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
                 PDImageXObject phoneImage = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\phone.png",doc);
                 PDImageXObject homeImg = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\home.png",doc);
+                PDImageXObject town = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\town.png",doc);
+                PDImageXObject mail = PDImageXObject.createFromFile("C:\\Users\\Admin\\Desktop\\C#\\mail.png",doc);
 
                 //x = 15 y= 621
                 contentStream.drawImage(phoneImage, 10, 590,11,11);
                 contentStream.drawImage(homeImg, 10, 590-25,11,11);
-        contentStream.drawImage(homeImg, 10, 590-25,11,11);
+                contentStream.drawImage(town, 10, 590-25-25,11,11);
+                contentStream.drawImage(mail, 10, 590-25-25-25,11,11);
 
 
                 int originalStartInitX = 20;

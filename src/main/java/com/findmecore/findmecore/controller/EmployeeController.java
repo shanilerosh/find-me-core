@@ -89,8 +89,8 @@ public class EmployeeController {
 
     }
 
-    @GetMapping("/cv/{empId}")
-    public ResponseEntity<String> generateCv(@PathVariable String empId) throws IOException {
+    @PostMapping("/cv/{empId}")
+    public ResponseEntity<String> generateCv(@PathVariable String empId,) throws IOException {
         return ResponseEntity.ok(employeeService.generateCv(empId, null));
 
     }
