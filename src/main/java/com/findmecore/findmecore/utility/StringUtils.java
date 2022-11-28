@@ -28,4 +28,9 @@ public class StringUtils {
             "    \n" +
             "\n" +
             " <p>Thanks & regards</p> <br><br><br><br><p style=\"font-size:11px;text-align:center\">This is an automatically generated e-mail from our System. Please do not reply to this e-mail.</p>";
+
+    public final static String CV_PROFILE_INFO = "I am a dedicated, organized and methodical individual. I have good interpersonal skills, am an excellent team worker and am keen and very willing to learn and develop new skills. I am reliable and dependable and often seek new responsibilities within a wide range of employment areas. I have an active and dynamic approach to work and getting things done. I am determined and decisive. I identify and develop opportunities.";
+    public final static String CV_PROFILE_REMARK = "I’m a nice fun and friendly person, I’m honest and punctual, I work well in a team but also on my own as I like to set myself goals which I will achieve, I have good listening and communication skills. I have a creative mind and am always up for new challenges. I am well organized and always plan ahead to make sure I manage my time well.";
+    public final static String CV_PROFILE_EXTRA = "While it is a good idea to also add co-curricular activities to your resume/CV, they are different from extracurricular activities. Co-curricular activities and experiences are ones that are more closely related to your chosen field of study, for example, sports, musical activities, debate, art, drama, debate, writing competition, etc. ";
+
 }

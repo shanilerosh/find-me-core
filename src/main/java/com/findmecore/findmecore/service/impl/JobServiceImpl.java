@@ -118,6 +118,20 @@ public class JobServiceImpl implements JobService {
         return true;
     }
 
+    @Override
+    public List<FriendCommonDto> findEmployeesByJob(String jobId) {
+        Job job = findJobById(jobId);
+
+        return jobEmployeeRepository.findAllByJob(job)
+                .stream().map(obj -> FriendCommonDto.builder()
+                        .friendId(obj.getId())
+                        .friendEmail(obj.getEmployee().getEmail())
+                        .friendEmpId(obj.getEmployee().getEmployeeId())
+                        .friendPhoto(obj.getEmployee().getProfilePicLocation())
+                        .friendName(obj.getEmployee().getName())
+                        .appliedOn(getDays(obj.getAppliedDate())).build()).collect(Collectors.toList());
+    }
+
     private Employee findEmployeeById(String empId) {
         return employeeRepository.findById(Long.valueOf(empId))
                 .orElseThrow(() -> {

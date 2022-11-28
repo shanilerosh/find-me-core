@@ -1,6 +1,7 @@
 package com.findmecore.findmecore.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.findmecore.findmecore.dto.FriendCommonDto;
 import com.findmecore.findmecore.dto.JobDto;
 import com.findmecore.findmecore.service.JobService;
 import lombok.extern.slf4j.Slf4j;
@@ -49,5 +50,9 @@ public class JobController {
         return ResponseEntity.ok(jobService.applyJob(empId, jobId));
     }
 
+    @GetMapping("/employee-applied/{jobId}")
+    public ResponseEntity<List<FriendCommonDto>> findEmployeesByJob(@PathVariable String jobId) {
+        return ResponseEntity.ok(jobService.findEmployeesByJob(jobId));
+    }
 
     }

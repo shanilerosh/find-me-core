@@ -19,7 +19,7 @@ import java.util.List;
 public class CvUtilDto implements Serializable {
 
     private String profileInfo;
-    private String ref1Data;
-    private String ref2Data;
+    private String remark;
+    private String extra;
     private String theme;
 }

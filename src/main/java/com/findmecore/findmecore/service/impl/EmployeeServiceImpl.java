@@ -411,6 +411,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         return Boolean.TRUE;
     }
 
+    private Color generateColorByTheme(String theme) {
+        switch (theme){
+            case "monochromic":
+                return Color.decode("#635446");
+            case "triadic":
+                return Color.decode("#731146");
+            case "daye":
+                return Color.decode("#3d5324");
+            default:
+                return Color.decode("#0c2c77");
+        }
+    }
+
     @Override
     public String generateCv(String empId, CvUtilDto cvUtilDto) throws IOException {
         int topHeadingFont = 35;
@@ -425,6 +438,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 //        EmployeeDto employee = findEmployeeByUsername(empId);
         Employee employee = findEmployeeById(empId);
 
+        //manipulate cv functionalities
+        if(null != cvUtilDto) {
+            employee = updateCvGenericData(employee, cvUtilDto);
+        }
+
         PDDocument doc = new PDDocument();
         PDPage pdPage = new PDPage();
         doc.addPage(pdPage);
@@ -433,9 +451,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         List<Ability> employeeSkills = abilityRepository.findAllByEmployee(employee);
 
+        Color mainColor = generateColorByTheme(employee.getTheme());
+
 
         //left colored section
-        contentStream.setNonStrokingColor(Color.DARK_GRAY);
+        contentStream.setNonStrokingColor(mainColor);
         contentStream.addRect(0, 0, 200, 900);
         contentStream.fill();
 
@@ -483,7 +503,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 contentStream.newLine();
 
                 contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-                contentStream.showText("<h1>Skills</h1>");
+                contentStream.showText("Skills");
 
                 contentStream.endText();
 
@@ -508,7 +528,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
                 int starInitX = originalStartInitX;
                 int starInitY = originalStartInitY;
-                int horizontalIncrementor = 15;
+                int horizontalIncrementor = 25;
                 int startSpace = 15;
 
                 for (Ability employeeSkill : employeeSkills) {
@@ -541,40 +561,6 @@ public class EmployeeServiceImpl implements EmployeeService {
                 contentStream.newLine();
                 contentStream.newLine();
 
-                contentStream.moveTextPositionByAmount(-60, 0);
-
-
-                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-                contentStream.showText("Non Related Refrees");
-
-                contentStream.newLine();
-                contentStream.newLine();
-
-
-                contentStream.showText(handleEmpty(employee.getRef1()));
-                contentStream.newLine();
-
-                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
-                contentStream.showText(handleEmpty(employee.getRef1Position()));
-                contentStream.newLine();
-                contentStream.showText(handleEmpty(employee.getRef1Address()));
-                contentStream.newLine();
-                contentStream.showText(handleEmpty(employee.getRef1Mobile()));
-
-                contentStream.newLine();
-                contentStream.newLine();
-
-                contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
-                contentStream.showText(handleEmpty(employee.getRef1()));
-                contentStream.newLine();
-
-                contentStream.setFont(PDType1Font.TIMES_ROMAN, 10);
-                contentStream.showText(handleEmpty(employee.getRef1Position()));
-                contentStream.newLine();
-                contentStream.showText(handleEmpty(employee.getRef1Address()));
-                contentStream.newLine();
-                contentStream.showText(handleEmpty(employee.getRef1Mobile()));
-
                 contentStream.endText();
 
                 //Side Bar End
@@ -586,17 +572,17 @@ public class EmployeeServiceImpl implements EmployeeService {
                 int startingProfileCordinateY = 720;
 
 
-                contentStream.setNonStrokingColor(Color.GRAY);
+                contentStream.setNonStrokingColor(mainColor);
                 contentStream.setFont(PDType1Font.TIMES_BOLD, 35);
                 contentStream.setLeading(35f);
                 contentStream.newLineAtOffset(startingProfileCordinateX, startingProfileCordinateY);
 
                 //Main Heading Name
-                contentStream.showText("Shanil Miranda");
+                contentStream.showText(employee.getName());
 
                 contentStream.newLine();
 
-                contentStream.setNonStrokingColor(Color.GRAY);
+                contentStream.setNonStrokingColor(mainColor);
                 contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
                 contentStream.showText("Personal Profile");
 
@@ -608,12 +594,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
                 contentStream.newLineAtOffset(3, 15);
 
-                addParagraph(contentStream,380,"Ut sodales arcu molestie, auctor ex rhoncus, consequat turpis. Donec vehicula suscipit vehicula. Vestibulum euismod sed eros ac accumsan. Aliquam ornare imperdiet dignissim. Suspendisse suscipit velit dapibus risus aliquam, ornare aliquet lorem placerat. Quisque est metus, blandit eu magna tempus, aliquam cursus est. Quisque varius nisi id lectus sodales facilisis. Donec placerat diam id quam bibendum auctor. Quisque dapibus odio at justo interdum pellentesque. Integer at risus ut lorem efficitur fermentum posuere tincidunt ex.");
+                addParagraph(contentStream,380,employee.getProfileInformation());
 
                 contentStream.setLeading(20f);
                 contentStream.newLine();
 
-        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setNonStrokingColor(mainColor);
         contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
         contentStream.showText("Education");
 
@@ -621,7 +607,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
         for (Course course : employee.getCourse()) {
-            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.setNonStrokingColor(mainColor);
             contentStream.setFont(PDType1Font.TIMES_BOLD, mediumTitleFont);
 
             contentStream.showText(course.getEducation().getInstitute());
@@ -651,7 +637,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         contentStream.newLine();
 
 
-        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setNonStrokingColor(mainColor);
         contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
         contentStream.showText("Experience");
 
@@ -659,7 +645,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
         for (Experience experience : employee.getExperiences()) {
-            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.setNonStrokingColor(mainColor);
             contentStream.setFont(PDType1Font.TIMES_BOLD, mediumTitleFont);
 
             contentStream.showText(experience.getCompanyMst().getCompanyName());
@@ -689,27 +675,27 @@ public class EmployeeServiceImpl implements EmployeeService {
         contentStream.newLine();
 
 
-        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setNonStrokingColor(mainColor);
         contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
         contentStream.showText("Other Remarks");
 
 
         contentStream.newLine();
 
-        addParagraph(contentStream,380,"I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
+        addParagraph(contentStream,380,employee.getProfileRemark());
 
         contentStream.setLeading(25f);
         contentStream.newLine();
 
 
-        contentStream.setNonStrokingColor(Color.GRAY);
+        contentStream.setNonStrokingColor(mainColor);
         contentStream.setFont(PDType1Font.TIMES_BOLD, mediumFont);
-        contentStream.showText("Extracurricular Activities");
+        contentStream.showText("Extra curricular Activities");
 
 
         contentStream.newLine();
 
-        addParagraph(contentStream,380,"I am hard working, methodical person who bears a good moral character. I can carry out the duties entrusted to me efficiently without any supervision.");
+        addParagraph(contentStream,380,employee.getExtra());
 
 
 
@@ -726,6 +712,49 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return Base64.getEncoder().encodeToString(stream.toByteArray());
     }
+
+    private Employee updateCvGenericData(Employee employee, CvUtilDto cvUtilDto) {
+
+        //Set defaults
+        Employee defaultEmployeee = setDefaults(employee);
+
+        if(null != cvUtilDto.getTheme()) {
+            defaultEmployeee.setTheme(cvUtilDto.getTheme());
+        }
+
+        if(null != cvUtilDto.getRemark()) {
+            defaultEmployeee.setProfileRemark(cvUtilDto.getRemark());
+        }
+
+        if(null != cvUtilDto.getExtra()) {
+            defaultEmployeee.setExtra(cvUtilDto.getExtra());
+        }
+
+        if(null != cvUtilDto.getProfileInfo()) {
+            defaultEmployeee.setProfileInformation(cvUtilDto.getProfileInfo());
+        }
+
+        return employeeRepository.save(employee);
+
+    }
+
+    private Employee setDefaults(Employee employee) {
+        if(null == employee.getTheme() || employee.getTheme().isBlank()) {
+            employee.setTheme("galaxy");
+        }
+        if(null == employee.getProfileInformation() || employee.getProfileInformation().isBlank()){
+            employee.setProfileInformation(StringUtils.CV_PROFILE_INFO);
+        }
+        if(null == employee.getProfileRemark() || employee.getProfileRemark().isBlank()){
+            employee.setProfileRemark(StringUtils.CV_PROFILE_REMARK);
+        }
+
+        if(null == employee.getExtra() || employee.getExtra().isBlank()){
+            employee.setExtra(StringUtils.CV_PROFILE_EXTRA);
+        }
+        return employee;
+    }
+
 
     @Override
     public List<SkillDto> generateSkills() {

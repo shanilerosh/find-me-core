@@ -81,7 +81,13 @@ public class Employee implements Serializable {
     private String profilePicLocation;
     private Boolean isUpdatedForTheFirstTime;
 
-
+    @Column(columnDefinition = "TEXT")
     private String profileInformation;
+    @Column(columnDefinition = "TEXT")
+    private String profileRemark;
+    @Column(columnDefinition = "TEXT")
+    private String extra;
+
+    private String theme;
 
 }

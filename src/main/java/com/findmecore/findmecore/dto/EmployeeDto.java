@@ -3,6 +3,7 @@ package com.findmecore.findmecore.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.persistence.Column;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -54,5 +55,11 @@ public class EmployeeDto implements Serializable {
     private String listOfConnections;
     private String listOfPosts;
     private String listOfFriends;
+
+
+    private String profileInformation;
+    private String profileRemark;
+    private String extra;
+    private String theme;
 
 }

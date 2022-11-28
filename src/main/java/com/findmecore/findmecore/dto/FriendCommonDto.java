@@ -19,6 +19,7 @@ public class FriendCommonDto implements Serializable {
     private Long friendEmpId;
     private String friendEmail;
     private String friendInfo;
+    private String appliedOn;
     private boolean isFriend;
 
 

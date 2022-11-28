@@ -1,5 +1,6 @@
 package com.findmecore.findmecore.service;
 
+import com.findmecore.findmecore.dto.FriendCommonDto;
 import com.findmecore.findmecore.dto.JobDto;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface JobService {
     List<JobDto> fetchAllJobs();
 
     Boolean applyJob(String empId, String jobId);
+
+    List<FriendCommonDto> findEmployeesByJob(String jobId);
 }
