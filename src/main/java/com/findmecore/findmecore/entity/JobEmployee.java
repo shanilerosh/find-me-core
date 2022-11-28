@@ -1,9 +1,6 @@
 package com.findmecore.findmecore.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -17,6 +14,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 public class JobEmployee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,5 +28,5 @@ public class JobEmployee {
     @JoinColumn(name = "job_id")
     private Job job;
 
-    private Date appliedOn;
+    private LocalDateTime appliedDate;
 }

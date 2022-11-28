@@ -22,8 +22,9 @@ public class Job implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Date createdDate;
+    private LocalDateTime createdDate;
     private Date expiryDate;
+    @Column(columnDefinition = "TEXT")
     private String jobDescription;
     private String jobTitle;
     private String status;

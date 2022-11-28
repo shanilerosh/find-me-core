@@ -86,6 +86,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private NotificationService notificationService;
 
+
+
     @Override
     public Boolean updateEmployeeBasicData(String empId, EmployeeDto employeeDto, MultipartFile file) {
 
@@ -131,8 +133,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         List<AbilityDto> listOfAbilities = fetchAbilitiesByEmployee(empId, employee);
 
         //fetch friends connections
-        List<FriendDto> listOfFriends = getCurrentFriendListOfAnEmployee(employee);
-        List<PostDto> postDtos = postService.fetchPostsByEmployee(employee);
+        List<FriendCommonDto> friends = findFriendsByEmployeeAndStatus(employee, FriendStatus.FRIENDS);
+        List<PostDto> postDtos = postService.fetchPosts(empId);
         int connectionSize = connectionRepository.findAllByFollowedEmployee(employee).size();
 
 
@@ -147,7 +149,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         build.setExperienceDtos(experienceList);
         build.setAbilityDtos(listOfAbilities);
 
-        build.setListOfFriends(null == listOfFriends ? "0" : Long.toString(listOfFriends.size()));
+        build.setListOfFriends(null == friends ? "0" : Long.toString(friends.size()));
         build.setListOfPosts(null == postDtos ? "0" : Long.toString(postDtos.size()));
         build.setListOfConnections(connectionSize+"");
 
