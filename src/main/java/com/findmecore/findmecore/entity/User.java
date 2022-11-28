@@ -60,6 +60,6 @@ public class User implements Serializable {
 
     @OneToOne(targetEntity = Employer.class)
     @JoinColumn(name = "employer_id")
-    private Employee employer;
+    private Employer employer;
 
 }

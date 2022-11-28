@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author ShanilErosh
@@ -29,5 +30,5 @@ public class JobEmployee {
     @JoinColumn(name = "job_id")
     private Job job;
 
-    private LocalDateTime appliedOn;
+    private Date appliedOn;
 }

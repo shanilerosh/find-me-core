@@ -1,9 +1,6 @@
 package com.findmecore.findmecore.service.impl;
 
-import com.findmecore.findmecore.dto.LocalUser;
-import com.findmecore.findmecore.dto.SignUpRequest;
-import com.findmecore.findmecore.dto.SocialProvider;
-import com.findmecore.findmecore.dto.UserDto;
+import com.findmecore.findmecore.dto.*;
 import com.findmecore.findmecore.entity.Role;
 import com.findmecore.findmecore.entity.User;
 import com.findmecore.findmecore.exceptions.OAuth2AuthenticationProcessingException;
@@ -12,8 +9,9 @@ import com.findmecore.findmecore.repo.RoleRepository;
 import com.findmecore.findmecore.repo.UserRepository;
 import com.findmecore.findmecore.security.oAuth2.user.OAuth2UserInfo;
 import com.findmecore.findmecore.security.oAuth2.user.OAuth2UserInfoFactory;
+import com.findmecore.findmecore.service.EmailService;
 import com.findmecore.findmecore.service.EmployeeService;
-import com.findmecore.findmecore.service.EmployerService;
+import com.findmecore.findmecore.service.EmployerHandleService;
 import com.findmecore.findmecore.service.UserService;
 import com.findmecore.findmecore.utility.GeneralUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +43,11 @@ public class UserServiceImpl implements UserService {
     private EmployeeService employeeService;
 
     @Autowired
-    private EmployerService employerService;
+    private EmployerHandleService employerHandleService;
+
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     @Transactional(value = "transactionManager")
@@ -69,9 +71,14 @@ public class UserServiceImpl implements UserService {
         if(!signUpRequest.isEmployer()) {
             employeeService.createEmployeeWithUserData(userDto);
         }else{
-            employerService.createEmployerWithUserData(userDto);
+            employerHandleService.createEmployerWithUserData(userDto);
         }
 
+        //send email
+        EmailDto build = EmailDto.builder().to(userDto.getEmail()).message(com.findmecore.findmecore.utility.StringUtils.NEW_CUSTOMER_EMAIL_BODY)
+                .subject("Welcome to find me - " + user.getEmail()).build();
+
+        emailService.createEmail(build);
         return user;
     }
 

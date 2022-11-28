@@ -401,7 +401,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder().email(user.getEmail()).user(user).isUpdatedForTheFirstTime(false)
                 .build();
 
-        employeeRepository.save(employee);
+        Employee savedEmploee = employeeRepository.save(employee);
+
+        user.setEmployee(savedEmploee);
+        userRepository.save(user);
+
         return Boolean.TRUE;
     }
 
@@ -856,6 +860,55 @@ public class EmployeeServiceImpl implements EmployeeService {
         return converAbilityEntitytoDto(ability);
     }
 
+    @Override
+    public Employee findEmployeeByUser(User id) {
+        return employeeRepository.findByUser(id)
+                .orElseThrow(()-> {
+                    throw new RuntimeException("user not found");
+                });
+    }
+
+    @Override
+    public List<FriendCommonDto> findNewFriends(String empId) {
+
+        Employee employee = findEmployeeById(empId);
+
+        List<FriendCommonDto> friends = findFriendsByEmployeeAndStatus(employee, FriendStatus.FRIENDS);
+        List<FriendCommonDto> requested = findFriendsByEmployeeAndStatus(employee, FriendStatus.REQUESTED);
+
+        //fetch my requested list
+        List<Friend> myRequestedList = friendRepository
+                .findAllByFriendAndFriendStatus(employee, FriendStatus.REQUESTED);
+
+
+        return employeeRepository.findAll().stream().filter(obj -> !obj.getEmployeeId().equals(employee.getEmployeeId())
+                && friends.stream().noneMatch(friend -> obj.getEmployeeId().equals(friend.getFriendEmpId()))
+                && myRequestedList.stream().noneMatch(friend -> obj.getEmployeeId().equals(friend.getCurrentEmployee().getEmployeeId()))
+                && requested.stream().noneMatch(reqFriend -> obj.getEmployeeId().equals(reqFriend.getFriendEmpId()))).
+
+                map(this::getFriendCommonDto).
+                distinct().collect(Collectors.toList());
+    }
+
+    @Override
+    public Boolean sendFriendRequest(String empId, String friendId) {
+
+        Employee requestingEmpl = findEmployeeById(empId);
+        Employee receivingEmpl = findEmployeeById(friendId);
+
+        friendRepository.findByCurrentEmployeeAndFriend(receivingEmpl, requestingEmpl)
+            .ifPresent(c -> {
+                throw new RuntimeException("Friendship already exist");
+            });
+
+        Friend build = Friend.builder().friend(requestingEmpl).currentEmployee(receivingEmpl).dateOfFriendShip(LocalDateTime.now())
+                .friendStatus(FriendStatus.REQUESTED).build();
+
+        friendRepository.save(build);
+
+        return true;
+    }
+
     private AbilityDto converAbilityEntitytoDto(Ability ability) {
         return AbilityDto.builder()
                 .skillId(ability.getSkill().getId()).skillName(ability.getSkill().getSkillName())
@@ -951,6 +1004,16 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .friendPhoto(friendProfile.getProfilePicLocation())
                 .friendName(friendProfile.getName())
                 .friendEmail(friendProfile.getEmail())
+                .build();
+    }
+
+    private FriendCommonDto getFriendCommonDto(Employee obj) {
+        return FriendCommonDto.builder()
+                .friendId(null).friendEmpId(obj.getEmployeeId()).
+                        friendInfo(obj.getAboutMe()).isFriend(false)
+                .friendPhoto(obj.getProfilePicLocation())
+                .friendName(obj.getName())
+                .friendEmail(obj.getEmail())
                 .build();
     }
 

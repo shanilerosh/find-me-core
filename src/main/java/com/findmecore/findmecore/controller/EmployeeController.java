@@ -120,6 +120,17 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.filterFriends(empId, status));
     }
 
+    @GetMapping("/find-friend/{empId}")
+    public ResponseEntity<List<FriendCommonDto>> findNewFriends(@PathVariable String empId) {
+        return ResponseEntity.ok(employeeService.findNewFriends(empId));
+    }
+
+
+    @GetMapping("/send-req/{empId}/{friendId}")
+    public ResponseEntity<Boolean> sendFriendRequest(@PathVariable String empId, @PathVariable String friendId) {
+        return ResponseEntity.ok(employeeService.sendFriendRequest(empId, friendId));
+    }
+
     @GetMapping("/friend/react/{friendshipId}/{status}")
     public ResponseEntity<Boolean> acceptRejectFriends(@PathVariable String friendshipId,@PathVariable String status) {
         return ResponseEntity.ok(employeeService.acceptRejectFriendship(friendshipId, status));

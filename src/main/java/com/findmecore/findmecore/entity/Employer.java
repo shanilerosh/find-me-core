@@ -32,5 +32,8 @@ public class Employer implements Serializable {
     @OneToMany(mappedBy = "employer")
     Set<Connection> connections;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    private User user;
+
     private Boolean isUpdatedForTheFirstTime;
 }

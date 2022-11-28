@@ -2,12 +2,14 @@ package com.findmecore.findmecore.controller;
 
 import com.findmecore.findmecore.dto.*;
 import com.findmecore.findmecore.entity.Employee;
+import com.findmecore.findmecore.entity.Employer;
 import com.findmecore.findmecore.entity.Role;
 import com.findmecore.findmecore.entity.User;
 import com.findmecore.findmecore.exceptions.UserAlreadyExistAuthenticationException;
 import com.findmecore.findmecore.repo.RoleRepository;
 import com.findmecore.findmecore.security.jwt.TokenProvider;
-import com.findmecore.findmecore.service.EmployerService;
+import com.findmecore.findmecore.service.EmployeeService;
+import com.findmecore.findmecore.service.EmployerHandleService;
 import com.findmecore.findmecore.service.UserService;
 import com.findmecore.findmecore.utility.GeneralUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -45,10 +47,10 @@ public class AuthController {
     TokenProvider tokenProvider;
 
     @Autowired
-    EmployerService employeeService;
+    EmployeeService employeeService;
 
     @Autowired
-    EmployerService employerService;
+    EmployerHandleService employerHandleService;
 
     @Autowired
     RoleRepository roleRepository;
@@ -70,8 +72,9 @@ public class AuthController {
             Employee employeeByUser = employeeService.findEmployeeByUser(user);
             return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, GeneralUtils.buildUserInfo(localUser, employeeByUser)));
         }else {
-            //EMployer Function
-            return null;
+
+            Employer byUser = employerHandleService.findByUser(user);
+            return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, GeneralUtils.buildUserInfo(localUser, byUser)));
         }
     }
 

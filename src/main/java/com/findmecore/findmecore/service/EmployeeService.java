@@ -2,6 +2,7 @@ package com.findmecore.findmecore.service;
 
 import com.findmecore.findmecore.dto.*;
 import com.findmecore.findmecore.entity.Employee;
+import com.findmecore.findmecore.entity.User;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -54,4 +55,10 @@ public interface EmployeeService {
     Boolean deleteAbility(String abilityId);
 
     AbilityDto fetchAbiltiyRecord(String id);
+
+    Employee findEmployeeByUser(User id);
+
+    List<FriendCommonDto> findNewFriends(String empId);
+
+    Boolean sendFriendRequest(String empId, String friendId);
 }
